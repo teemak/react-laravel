@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  server:
+    image: "nginx:stable-alpine"
+    ports:
+      - "8080:80"
+    volumes:
+      # --- pass this ----:-- destination read-only --
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+  php:
+    build: 
+      context: ./dockerfiles
+      dockerfile: php.dockerfile
+    volumes:
+      # delegated is processed in batches
+      # doesn't reflect writes to OS immediately
+      - ./src/var/www/html:delegated
+    ports:
+      - "3000:9000"
+  mysql:
+    image: mysql:5.7
+    # environment: variables set in file
+    env_file:
+      - ./env/mysql.env
+  composer: # utility container
+    build:
+      context: ./dockerfiles
+      dockerfile: composer.dockerfile 
+    volumes: # bind source directory to source code - laravel install will mirror onto local machine
+      - ./src:/var/www/html
+  # artisan:
+  # npm:
